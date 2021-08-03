@@ -1,0 +1,97 @@
+Imports MySql.Data.MySqlClient
+Public Class Form
+
+    Public conn As New MySqlConnection("host=localhost;username=root;password=;database=test_vb")
+    Public cmd As New MySqlCommand
+    Public dr As MySqlDataReader
+    Public da As MySqlDataAdapter
+    Dim ds As New DataSet
+
+    Private Sub Form_Load(sender As System.Object, e As System.EventArgs) Handles MyBase.Load
+        Me.Label1.Text = "id"
+        Me.Label2.Text = "name"
+        Me.Label3.Text = "address"
+
+        GetRecords()
+    End Sub
+
+    Private Sub GetRecords()
+        ds = New DataSet
+        da = New MySqlDataAdapter("SELECT * FROM info", conn)
+        da.Fill(ds, "info")
+
+        DataGridView1.DataSource = ds
+        DataGridView1.DataMember = "info"
+
+    End Sub
+
+    Private Sub Button1_Click(sender As System.Object, e As System.EventArgs) Handles Button1.Click
+        Try
+            conn.Open()
+            cmd.Connection = conn
+            cmd.CommandType = CommandType.Text
+            cmd.CommandText = "SELECT * FROM info WHERE name='" & TextBox2.Text & "'"
+            dr = cmd.ExecuteReader
+
+            If dr.HasRows Then
+                MsgBox("Data already exists!", MsgBoxStyle.Exclamation)
+                conn.Close()
+            Else
+                conn.Close()
+                conn.Open()
+                cmd = New MySqlCommand("INSERT INTO info (name,address) VALUES('" & TextBox2.Text & "','" & TextBox3.Text & "')", conn)
+                cmd.ExecuteNonQuery()
+                MsgBox("Successfully Added!", MsgBoxStyle.Information)
+
+                TextBox1.Text = ""
+                TextBox2.Text = ""
+                TextBox3.Text = ""
+
+                conn.Close()
+                GetRecords()
+            End If
+        Catch ex As Exception
+            MsgBox(ex.Message)
+        End Try
+    End Sub
+
+    Private Sub Button2_Click(sender As System.Object, e As System.EventArgs) Handles Button2.Click
+        Dim i As Integer
+
+        i = DataGridView1.CurrentRow.Index
+        TextBox1.Text = DataGridView1.Item(0, i).Value
+        TextBox2.Text = DataGridView1.Item(1, i).Value
+        TextBox3.Text = DataGridView1.Item(2, i).Value
+    End Sub
+
+    Private Sub Button4_Click(sender As System.Object, e As System.EventArgs) Handles Button4.Click
+        conn.Open()
+        Dim update As String
+        update = "Update info set name='" & TextBox2.Text & "',address='" & TextBox3.Text & "' WHERE id='" & TextBox1.Text & "'"
+        cmd = New MySqlCommand(update, conn)
+        cmd.ExecuteReader()
+        MsgBox("Data Updated", MsgBoxStyle.Information)
+
+        TextBox1.Text = ""
+        TextBox2.Text = ""
+        TextBox3.Text = ""
+
+        conn.Close()
+        GetRecords()
+    End Sub
+
+    Private Sub Button3_Click(sender As System.Object, e As System.EventArgs) Handles Button3.Click
+        conn.Open()
+        Dim delete As String
+        delete = "DELETE FROM info WHERE id='" & TextBox1.Text & "'"
+        cmd = New MySqlCommand(delete, conn)
+        cmd.ExecuteReader()
+        MsgBox("Data Delete successfully", MsgBoxStyle.Critical)
+
+        TextBox1.Text = ""
+        TextBox2.Text = ""
+        TextBox3.Text = ""
+        conn.Close()
+        GetRecords()
+    End Sub
+End Class
